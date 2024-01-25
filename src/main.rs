@@ -12,6 +12,10 @@ fn main() {
     // First argument is input .wav file, second argument is output text file.
     let args: Vec<String> = std::env::args().collect();
     // TODO: your code here
+    let input_filename = &args[1];
+    let output_filename = &args[2];
+    dbg!(input_filename);
+    dbg!(output_filename);
 
     // Open the input wave file and determine number of channels
     // TODO: your code here; see `hound::WavReader::open`.
