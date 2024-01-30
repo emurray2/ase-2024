@@ -1,5 +1,6 @@
 use std::path::Path;
 use std::{fs::File, io::Write};
+use hound::WavReader;
 
 fn show_info() {
     eprintln!("MUSI-6106 Assignment Executable");
@@ -21,6 +22,7 @@ fn main() {
     // Open the input wave file and determine number of channels
     // TODO: your code here; see `hound::WavReader::open`.
     let path = Path::new(input_filename);
+    let reader = hound::WavReader::open(&path);
     // Read audio data and write it to the output text file (one column per channel)
     // TODO: your code here; we suggest using `hound::WavReader::samples`, `File::create`, and `write!`.
     //       Remember to convert the samples to floating point values and respect the number of channels!
