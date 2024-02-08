@@ -1,3 +1,4 @@
+#[derive(Default)]
 pub struct RingBuffer<T> {
     head: T,
     tail: T,
