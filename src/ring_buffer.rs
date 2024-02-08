@@ -16,7 +16,9 @@ impl<T: Copy + Default> RingBuffer<T> {
 
     pub fn reset(&mut self) {
         // Clear internal buffer and reset indices.
-        todo!()
+        self.buffer = vec![T::default(); self.buffer.capacity()];
+        self.head_index = 0;
+        self.tail_index = 0;
     }
 
     // `put` and `peek` write/read without advancing the indices.
