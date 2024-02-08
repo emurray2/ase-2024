@@ -27,7 +27,7 @@ impl<T: Copy + Default> RingBuffer<T> {
     }
 
     pub fn peek(&self) -> T {
-        todo!()
+        return self.buffer[self.tail_index];
     }
 
     pub fn get(&self, offset: usize) -> T {
