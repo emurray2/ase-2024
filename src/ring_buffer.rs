@@ -12,6 +12,8 @@ impl<T: Copy + Default> RingBuffer<T> {
         let mut buffer = vec![T::default(); length];
         let mut head_index: usize = 0;
         let mut tail_index: usize = 0;
+        let ring_buffer = RingBuffer{buffer, head_index, tail_index };
+        return ring_buffer;
     }
 
     pub fn reset(&mut self) {
