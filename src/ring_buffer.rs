@@ -1,5 +1,6 @@
 pub struct RingBuffer<T> {
-    // TODO: fill this in.
+    head: T,
+    tail: T,
 }
 
 impl<T: Copy + Default> RingBuffer<T> {
