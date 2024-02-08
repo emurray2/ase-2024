@@ -7,7 +7,7 @@ impl<T: Copy + Default> RingBuffer<T> {
     pub fn new(length: usize) -> Self {
         // Create a new RingBuffer with `length` slots and "default" values.
         // Hint: look into `vec!` and the `Default` trait.
-        
+        let mut buffer = vec![T::default(); length];
     }
 
     pub fn reset(&mut self) {
