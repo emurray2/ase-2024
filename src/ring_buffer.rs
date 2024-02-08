@@ -48,7 +48,7 @@ impl<T: Copy + Default> RingBuffer<T> {
     }
 
     pub fn set_read_index(&mut self, index: usize) {
-        todo!()
+        self.tail_index = index;
     }
 
     pub fn get_write_index(&self) -> usize {
@@ -56,7 +56,7 @@ impl<T: Copy + Default> RingBuffer<T> {
     }
 
     pub fn set_write_index(&mut self, index: usize) {
-        todo!()
+        self.head_index = index;
     }
 
     pub fn len(&self) -> usize {
