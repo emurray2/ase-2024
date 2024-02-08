@@ -23,7 +23,7 @@ impl<T: Copy + Default> RingBuffer<T> {
 
     // `put` and `peek` write/read without advancing the indices.
     pub fn put(&mut self, value: T) {
-        todo!()
+        self.buffer[self.head_index] = value;
     }
 
     pub fn peek(&self) -> T {
