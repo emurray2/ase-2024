@@ -1,8 +1,8 @@
 #[derive(Default)]
 pub struct RingBuffer<T> {
     buffer: Vec<T>,
-    head_index: i8,
-    tail_index: i8,
+    head_index: usize,
+    tail_index: usize,
 }
 
 impl<T: Copy + Default> RingBuffer<T> {
@@ -10,8 +10,8 @@ impl<T: Copy + Default> RingBuffer<T> {
         // Create a new RingBuffer with `length` slots and "default" values.
         // Hint: look into `vec!` and the `Default` trait.
         let mut buffer = vec![T::default(); length];
-        let mut head_index: i8 = 0;
-        let mut tail_index: i8 = 0;
+        let mut head_index: usize = 0;
+        let mut tail_index: usize = 0;
     }
 
     pub fn reset(&mut self) {
@@ -44,7 +44,7 @@ impl<T: Copy + Default> RingBuffer<T> {
     }
 
     pub fn get_read_index(&self) -> usize {
-        todo!()
+        return self.tail_index;
     }
 
     pub fn set_read_index(&mut self, index: usize) {
@@ -52,7 +52,7 @@ impl<T: Copy + Default> RingBuffer<T> {
     }
 
     pub fn get_write_index(&self) -> usize {
-        todo!()
+        return self.head_index;
     }
 
     pub fn set_write_index(&mut self, index: usize) {
