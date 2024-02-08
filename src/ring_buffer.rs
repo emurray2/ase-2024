@@ -1,7 +1,6 @@
 #[derive(Default)]
 pub struct RingBuffer<T> {
-    head: T,
-    tail: T,
+    let buffer: T,
 }
 
 impl<T: Copy + Default> RingBuffer<T> {
