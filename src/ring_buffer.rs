@@ -31,7 +31,7 @@ impl<T: Copy + Default> RingBuffer<T> {
     }
 
     pub fn get(&self, offset: usize) -> T {
-        todo!()
+        return self.buffer[(self.tail_index + offset) % self.capacity()];
     }
 
     // `push` and `pop` write/read and advance the indices.
