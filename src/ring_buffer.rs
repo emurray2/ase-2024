@@ -1,13 +1,13 @@
 #[derive(Default)]
 pub struct RingBuffer<T> {
-    let buffer: T,
+    let buffer: Vec<T>,
 }
 
 impl<T: Copy + Default> RingBuffer<T> {
     pub fn new(length: usize) -> Self {
         // Create a new RingBuffer with `length` slots and "default" values.
         // Hint: look into `vec!` and the `Default` trait.
-        todo!()
+        
     }
 
     pub fn reset(&mut self) {
