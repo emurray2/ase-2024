@@ -1,6 +1,8 @@
 #[derive(Default)]
 pub struct RingBuffer<T> {
-    let buffer: Vec<T>,
+    buffer: Vec<T>,
+    head_index: i8,
+    tail_index: i8,
 }
 
 impl<T: Copy + Default> RingBuffer<T> {
