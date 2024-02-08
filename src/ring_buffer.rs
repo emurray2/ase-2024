@@ -33,17 +33,20 @@ impl<T: Copy + Default> RingBuffer<T> {
     }
 
     pub fn get(&self, offset: usize) -> T {
-        return self.buffer[(self.tail_index + offset) % self.capacity()];
+        let capacity = self.capacity();
+        return self.buffer[(self.tail_index + offset) % capacity];
     }
 
     // `push` and `pop` write/read and advance the indices.
     pub fn push(&mut self, value: T) {
-        self.buffer[self.head_index % self.capacity()] = value;
+        let capacity = self.capacity();
+        self.buffer[self.head_index % capacity] = value;
         self.head_index += 1;
     }
 
     pub fn pop(&mut self) -> T {
-        let result = self.buffer[self.tail_index % self.capacity()];
+        let capacity = self.capacity();
+        let result = self.buffer[self.tail_index % capacity];
         self.tail_index += 1;
         return result;
     }
