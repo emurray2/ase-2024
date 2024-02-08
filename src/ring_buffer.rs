@@ -36,7 +36,8 @@ impl<T: Copy + Default> RingBuffer<T> {
 
     // `push` and `pop` write/read and advance the indices.
     pub fn push(&mut self, value: T) {
-        todo!()
+        self.buffer[self.head_index % self.capacity()] = value;
+        self.head_index += 1;
     }
 
     pub fn pop(&mut self) -> T {
