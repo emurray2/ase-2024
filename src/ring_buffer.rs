@@ -41,7 +41,9 @@ impl<T: Copy + Default> RingBuffer<T> {
     }
 
     pub fn pop(&mut self) -> T {
-        todo!()
+        let result = self.buffer[self.tail_index % self.capacity()];
+        self.tail_index += 1;
+        return result;
     }
 
     pub fn get_read_index(&self) -> usize {
