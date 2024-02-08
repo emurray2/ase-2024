@@ -10,6 +10,8 @@ impl<T: Copy + Default> RingBuffer<T> {
         // Create a new RingBuffer with `length` slots and "default" values.
         // Hint: look into `vec!` and the `Default` trait.
         let mut buffer = vec![T::default(); length];
+        let mut head_index: i8 = 0;
+        let mut tail_index: i8 = 0;
     }
 
     pub fn reset(&mut self) {
