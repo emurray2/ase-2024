@@ -61,11 +61,11 @@ impl<T: Copy + Default> RingBuffer<T> {
 
     pub fn len(&self) -> usize {
         // Return number of values currently in the buffer.
-        todo!()
+        return self.buffer.len();
     }
 
     pub fn capacity(&self) -> usize {
         // Return the length of the internal buffer.
-        todo!()
+        return self.buffer.capacity();
     }
 }
