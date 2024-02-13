@@ -36,7 +36,9 @@ impl CombFilter {
     }
 
     pub fn reset(&mut self) {
-        todo!("implement")
+        for buffer in self.delay_line_list.iter_mut() {
+            buffer.reset();
+        }
     }
 
     pub fn process(&mut self, input: &[&[f32]], output: &mut [&mut [f32]]) {
