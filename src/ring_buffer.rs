@@ -1,8 +1,8 @@
 // From exercise-2-solution branch
 pub struct RingBuffer<T> {
-    buffer: Vec<T>,
-    head: usize,
-    tail: usize,
+    pub(crate) buffer: Vec<T>,
+    pub(crate) head: usize,
+    pub(crate) tail: usize,
 }
 
 impl<T: Copy + Default> RingBuffer<T> {

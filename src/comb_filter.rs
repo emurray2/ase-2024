@@ -30,7 +30,7 @@ impl CombFilter {
         let capacity = (sample_rate_hz / max_delay_secs).round() as usize;
         CombFilter {
             filter_type,
-            delay_line_list: vec![RingBuffer::new(capacity); num_channels],
+            delay_line_list: vec![RingBuffer{buffer: vec![f32::default(), capacity], head: 0, tail: capacity-1}; num_channels],
             parameters: HashMap::from([(FilterParam::Gain, 0.5), (FilterParam::Delay, max_delay_secs)]),
         }
     }
