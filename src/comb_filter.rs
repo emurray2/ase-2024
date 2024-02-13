@@ -4,8 +4,6 @@ use crate::ring_buffer::RingBuffer;
 
 pub struct CombFilter {
     filter_type: FilterType,
-    gain: FilterParam,
-    delay: FilterParam,
     delay_line_list: Vec<RingBuffer<f32>>,
     parameters: HashMap<FilterParam, f32>,
 }
