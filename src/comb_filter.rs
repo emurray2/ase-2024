@@ -28,7 +28,7 @@ pub enum Error {
 
 impl CombFilter {
     pub fn new(filter_type: FilterType, max_delay_secs: f32, sample_rate_hz: f32, num_channels: usize) -> Self {
-        let capacity = (sample_rate_hz / max_delay_secs).round() as usize;
+        let capacity = (sample_rate_hz*max_delay_secs) as usize;
         CombFilter {
             filter_type,
             max_delay_secs,
