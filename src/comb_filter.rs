@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::iter::Filter;
 use crate::ring_buffer::RingBuffer;
 
@@ -6,6 +7,7 @@ pub struct CombFilter {
     gain: FilterParam,
     delay: FilterParam,
     delay_line_list: Vec<RingBuffer<f32>>,
+    parameters: HashMap<FilterParam, f32>,
 }
 
 #[derive(Debug, Clone, Copy)]
