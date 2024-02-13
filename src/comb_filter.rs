@@ -27,7 +27,12 @@ pub enum Error {
 
 impl CombFilter {
     pub fn new(filter_type: FilterType, max_delay_secs: f32, sample_rate_hz: f32, num_channels: usize) -> Self {
-        todo!("implement")
+        let capacity = (sample_rate_hz / max_delay_secs).round() as usize;
+        CombFilter {
+            filter_type,
+            delay_line_list: vec![RingBuffer::new(capacity); num_channels],
+            parameters: HashMap::from([(FilterParam::Gain, 0.5), (FilterParam::Delay, max_delay_secs)]),
+        }
     }
 
     pub fn reset(&mut self) {
