@@ -46,9 +46,31 @@ impl CombFilter {
     }
 
     pub fn process(&mut self, input: &[&[f32]], output: &mut [&mut [f32]]) {
-        let x_n = input;
         let gain = self.get_param(FilterParam::Gain);
-        let delay: = self.get_param(FilterParam::Delay);
+        let delay= self.get_param(FilterParam::Delay);
+        let mut i = 0;
+        for output_channel_buffer in output.iter_mut() {
+            let read_location = self.delay_line_list[i].get_read_index();
+            self.delay_line_list[i].set_write_index(read_location + (self.sample_rate_hz*delay) as usize);
+            let input_channel_buffer = input[i];
+            let mut j = 0;
+            for mut output_sample in output_channel_buffer.iter_mut() {
+                let x_n = input_channel_buffer[j];
+                let delay_line_value = self.delay_line_list[i].pop();
+                match self.filter_type {
+                    FilterType::FIR => {
+                        output_sample = &mut (x_n + gain * delay_line_value);
+                        self.delay_line_list[i].push(x_n);
+                    },
+                    FilterType::IIR => {
+                        output_sample = &mut (x_n + gain * delay_line_value);
+                        self.delay_line_list[i].push(x_n + gain * delay_line_value);
+                    },
+                }
+                j += 1;
+            }
+            i += 1;
+        }
     }
 
     pub fn set_param(&mut self, param: FilterParam, value: f32) -> Result<(), Error> {
