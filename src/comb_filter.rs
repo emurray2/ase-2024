@@ -46,7 +46,9 @@ impl CombFilter {
     }
 
     pub fn process(&mut self, input: &[&[f32]], output: &mut [&mut [f32]]) {
-        todo!("implement");
+        let x_n = input;
+        let gain = self.get_param(FilterParam::Gain);
+        let delay: = self.get_param(FilterParam::Delay);
     }
 
     pub fn set_param(&mut self, param: FilterParam, value: f32) -> Result<(), Error> {
