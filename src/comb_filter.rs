@@ -67,7 +67,14 @@ impl CombFilter {
     }
 
     pub fn get_param(&self, param: FilterParam) -> f32 {
-        todo!("implement")
+        match param {
+            FilterParam::Delay => {
+                self.parameter_list[1]
+            },
+            FilterParam::Gain => {
+                self.parameter_list[0]
+            }
+        }
     }
 
     // TODO: feel free to define other functions for your own use
