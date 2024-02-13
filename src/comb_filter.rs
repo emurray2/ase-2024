@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-use std::iter::Filter;
 use crate::ring_buffer::RingBuffer;
 
 pub struct CombFilter {
@@ -8,7 +6,7 @@ pub struct CombFilter {
     sample_rate_hz: f32,
     num_channels: usize,
     delay_line_list: Vec<RingBuffer<f32>>,
-    parameters: HashMap<FilterParam, f32>,
+    parameter_list: Vec<f32>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -36,8 +34,8 @@ impl CombFilter {
             max_delay_secs,
             sample_rate_hz,
             num_channels,
-            delay_line_list: vec![RingBuffer{buffer: vec![f32::default(), capacity], head: 0, tail: capacity-1}; num_channels],
-            parameters: HashMap::from([(FilterParam::Gain, 0.5), (FilterParam::Delay, max_delay_secs)]),
+            delay_line_list: vec![RingBuffer{buffer: vec![f32::default(); capacity], head: 0, tail: capacity-1}; num_channels],
+            parameter_list: vec![0.5, max_delay_secs],
         }
     }
 
@@ -52,7 +50,20 @@ impl CombFilter {
     }
 
     pub fn set_param(&mut self, param: FilterParam, value: f32) -> Result<(), Error> {
-        todo!("implement")
+        match param {
+            FilterParam::Delay => {
+                if value > self.max_delay_secs {
+                    Result::Err(Error::InvalidValue {param, value})
+                } else {
+                    self.parameter_list[1] = value;
+                    Result::Ok(())
+                }
+            },
+            FilterParam::Gain => {
+                self.parameter_list[0] = value;
+                Result::Ok(())
+            },
+        }
     }
 
     pub fn get_param(&self, param: FilterParam) -> f32 {

@@ -1,4 +1,5 @@
 // From exercise-2-solution branch
+#[derive(Clone)]
 pub struct RingBuffer<T> {
     pub(crate) buffer: Vec<T>,
     pub(crate) head: usize,
