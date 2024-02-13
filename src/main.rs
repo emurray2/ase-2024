@@ -1,6 +1,7 @@
 use std::{fs::File, io::Write};
 
 mod comb_filter;
+mod ring_buffer;
 
 fn show_info() {
     eprintln!("MUSI-6106 Assignment Executable");
