@@ -4,6 +4,9 @@ use crate::ring_buffer::RingBuffer;
 
 pub struct CombFilter {
     filter_type: FilterType,
+    max_delay_secs: f32,
+    sample_rate_hz: f32,
+    num_channels: usize,
     delay_line_list: Vec<RingBuffer<f32>>,
     parameters: HashMap<FilterParam, f32>,
 }
@@ -30,6 +33,9 @@ impl CombFilter {
         let capacity = (sample_rate_hz / max_delay_secs).round() as usize;
         CombFilter {
             filter_type,
+            max_delay_secs,
+            sample_rate_hz,
+            num_channels,
             delay_line_list: vec![RingBuffer{buffer: vec![f32::default(), capacity], head: 0, tail: capacity-1}; num_channels],
             parameters: HashMap::from([(FilterParam::Gain, 0.5), (FilterParam::Delay, max_delay_secs)]),
         }
