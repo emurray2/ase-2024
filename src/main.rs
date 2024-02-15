@@ -1,4 +1,6 @@
 use std::{fs::File, io::Write};
+use std::io::{BufRead, Read};
+use crate::comb_filter::{CombFilter, FilterType};
 
 mod comb_filter;
 mod ring_buffer;
@@ -29,8 +31,25 @@ fn main() {
 
     // Read audio data and write it to the output text file (one column per channel)
     let mut out = File::create(&args[2]).expect("Unable to create file");
+    let mut sample_index = 0;
+    let mut input_buffer = vec![vec![f32::default(); channels as usize]; block_size as usize];
+    let mut output_buffer = vec![vec![f32::default(); channels as usize]; block_size as usize];
+    let mut comb_filter = CombFilter::new(FilterType::FIR, 1.0, 44100.0, 2);
     for (i, sample) in reader.samples::<i16>().enumerate() {
         let sample = sample.unwrap() as f32 / (1 << 15) as f32;
+        if sample_index < block_size*channels {
+            let channel_index = i % channels as usize;
+            input_buffer[sample_index as usize][channel_index as usize] = sample;
+            sample_index += 1;
+        } else {
+            let input_buffer_slice = &input_buffer[..].iter().map(|v| v.as_slice()).collect::<Vec<_>>();
+            let input_buffer_slice_2d = &input_buffer_slice[..];
+            let mut output_buffer_slice = output_buffer[..].iter_mut().map(|v| v.as_mut_slice()).collect::<Vec<_>>();
+            let output_buffer_slice_2d = &mut output_buffer_slice[..];
+            comb_filter.process(input_buffer_slice_2d, output_buffer_slice_2d);
+            input_buffer.clear();
+            sample_index = 0;
+        }
         write!(out, "{}{}", sample, if i % channels as usize == (channels - 1).into() { "\n" } else { " " }).unwrap();
     }
 }
