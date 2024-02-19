@@ -34,7 +34,7 @@ impl CombFilter {
             max_delay_secs,
             sample_rate_hz,
             num_channels,
-            delay_line_list: vec![RingBuffer{buffer: vec![f32::default(); capacity], head: 0, tail: capacity-1}; num_channels],
+            delay_line_list: vec![RingBuffer{buffer: vec![f32::default(); capacity+1], head: 0, tail: 1}; num_channels],
             parameter_list: vec![0.5, max_delay_secs],
         }
     }
@@ -49,22 +49,19 @@ impl CombFilter {
         let gain = self.get_param(FilterParam::Gain);
         let delay= self.get_param(FilterParam::Delay);
         let mut i = 0;
-        for output_channel_buffer in output.iter_mut() {
-            let read_location = self.delay_line_list[i].get_read_index();
-            self.delay_line_list[i].set_write_index(read_location + (self.sample_rate_hz*delay) as usize);
-            let input_channel_buffer = input[i];
+        for block in output.iter_mut() {
             let mut j = 0;
-            for mut output_sample in output_channel_buffer.iter_mut() {
-                let x_n = input_channel_buffer[j];
-                let delay_line_value = self.delay_line_list[i].pop();
+            for sample in block.iter_mut() {
+                let x_n = input[i][j];
                 match self.filter_type {
                     FilterType::FIR => {
-                        output_sample = &mut (x_n + gain * delay_line_value);
-                        self.delay_line_list[i].push(x_n);
+                        *sample = x_n + gain * self.delay_line_list[j].pop();
+                        self.delay_line_list[j].push(x_n);
                     },
                     FilterType::IIR => {
-                        output_sample = &mut (x_n + gain * delay_line_value);
-                        self.delay_line_list[i].push(x_n + gain * delay_line_value);
+                        let value = self.delay_line_list[j].peek();
+                        *sample = x_n + gain * value;
+                        self.delay_line_list[j].push(x_n + gain * value);
                     },
                 }
                 j += 1;
