@@ -40,8 +40,11 @@ impl CombFilter {
     }
 
     pub fn reset(&mut self) {
+        self.set_param(FilterParam::Gain, 0.5).unwrap();
+        self.set_param(FilterParam::Delay, self.max_delay_secs).unwrap();
         for buffer in self.delay_line_list.iter_mut() {
             buffer.reset();
+            buffer.set_read_index((self.sample_rate_hz*self.max_delay_secs) as usize - 1);
         }
     }
 
