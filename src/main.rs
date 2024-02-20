@@ -1,6 +1,6 @@
 use std::{fs::File, io::Write};
 use std::io::{BufRead, BufWriter, Read};
-use crate::comb_filter::{CombFilter, FilterType};
+use crate::comb_filter::{CombFilter, FilterParam, FilterType};
 
 mod comb_filter;
 mod ring_buffer;
@@ -15,8 +15,8 @@ fn main() {
 
     // Parse command line arguments
     let args: Vec<String> = std::env::args().collect();
-    if args.len() < 3 {
-        eprintln!("Usage: {} <input wave filename> <output text filename>", args[0]);
+    if args.len() < 7 {
+        eprintln!("Usage: {} <input wave filename> <output text filename> <filter_type> <max_delay_secs> <gain> <delay>", args[0]);
         return
     }
 
@@ -36,7 +36,14 @@ fn main() {
     let mut block_index: u32 = 0;
     let mut input_buffer = vec![vec![f32::default(); channels as usize]; block_size as usize];
     let mut output_buffer = vec![vec![f32::default(); channels as usize]; block_size as usize];
-    let mut comb_filter = CombFilter::new(FilterType::FIR, 1.0, 44100.0, channels as usize);
+    let mut comb_filter: CombFilter;
+    if &args[3] == "FIR" {
+        comb_filter = CombFilter::new(FilterType::FIR, args[4].parse().unwrap(), spec.sample_rate as f32, channels as usize);
+    } else {
+        comb_filter = CombFilter::new(FilterType::IIR, args[4].parse().unwrap(), spec.sample_rate as f32, channels as usize);
+    }
+    _ = comb_filter.set_param(FilterParam::Gain, args[5].parse().unwrap());
+    _ = comb_filter.set_param(FilterParam::Delay, args[6].parse().unwrap());
     for (i, sample) in reader.samples::<i16>().enumerate() {
         let sample = sample.unwrap() as f32 / (1 << 15) as f32;
         let channel_index = i % channels as usize;
