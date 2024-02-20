@@ -69,12 +69,24 @@ fn main() {
             sample_index += 1;
         }
     }
-    let current_length = (block_index*block_size as u32);
-    let remaining_length = (reader.len()/channels as u32) - current_length;
-    let mut i: u32 = 0;
-    while i < remaining_length {
-        out.write_sample(0).unwrap();
-        out.write_sample(0).unwrap();
-        i += 1;
+    // Handle remaining samples by zero padding another block
+    if sample_index != 0 {
+        for i in sample_index .. block_size {
+            for j in 0 .. channels as usize {
+                input_buffer[i][j] = 0.0;
+            }
+        }
+        let input_buffer_slice = &input_buffer[..].iter().map(|v| v.as_slice()).collect::<Vec<_>>();
+        let input_buffer_slice_2d = &input_buffer_slice[..];
+        let mut output_buffer_slice = output_buffer[..].iter_mut().map(|v| v.as_mut_slice()).collect::<Vec<_>>();
+        let output_buffer_slice_2d = &mut output_buffer_slice[..];
+        comb_filter.process(input_buffer_slice_2d, output_buffer_slice_2d);
+        for i in 0 .. block_size {
+            for j in 0 .. channels as usize {
+                let sample = output_buffer[i][j];
+                let written_sample = (sample * i16::MAX as f32) as i16;
+                out.write_sample(written_sample).unwrap();
+            }
+        }
     }
 }
