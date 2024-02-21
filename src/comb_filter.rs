@@ -269,6 +269,7 @@ fn test_correct_zero() {
     }
 }
 #[test]
+// Test if a mono channel and the same signal in stereo give the same test result
 fn test_mono_and_multichannel() {
     let mut block_size: usize = 1024;
     let channels= 1;
