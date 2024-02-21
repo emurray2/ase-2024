@@ -1,6 +1,9 @@
 use std::{fs::File, io::Write};
+use std::io::{BufRead, BufWriter, Read};
+use crate::comb_filter::{CombFilter, FilterParam, FilterType};
 
 mod comb_filter;
+mod ring_buffer;
 
 fn show_info() {
     eprintln!("MUSI-6106 Assignment Executable");
@@ -12,8 +15,8 @@ fn main() {
 
     // Parse command line arguments
     let args: Vec<String> = std::env::args().collect();
-    if args.len() < 3 {
-        eprintln!("Usage: {} <input wave filename> <output text filename>", args[0]);
+    if args.len() < 7 {
+        eprintln!("Usage: {} <input wave filename> <output text filename> <filter_type> <max_delay_secs> <gain> <delay>", args[0]);
         return
     }
 
@@ -27,9 +30,63 @@ fn main() {
     let block_size = 1024;
 
     // Read audio data and write it to the output text file (one column per channel)
-    let mut out = File::create(&args[2]).expect("Unable to create file");
+    //let mut out = File::create(&args[2]).expect("Unable to create file");
+    let mut out = hound::WavWriter::create(&args[2], spec).unwrap();
+    let mut sample_index = 0;
+    let mut block_index: u32 = 0;
+    let mut input_buffer = vec![vec![f32::default(); channels as usize]; block_size as usize];
+    let mut output_buffer = vec![vec![f32::default(); channels as usize]; block_size as usize];
+    let mut comb_filter: CombFilter;
+    if &args[3] == "FIR" {
+        comb_filter = CombFilter::new(FilterType::FIR, args[4].parse().unwrap(), spec.sample_rate as f32, channels as usize);
+    } else {
+        comb_filter = CombFilter::new(FilterType::IIR, args[4].parse().unwrap(), spec.sample_rate as f32, channels as usize);
+    }
+    _ = comb_filter.set_param(FilterParam::Gain, args[5].parse().unwrap());
+    _ = comb_filter.set_param(FilterParam::Delay, args[6].parse().unwrap());
     for (i, sample) in reader.samples::<i16>().enumerate() {
         let sample = sample.unwrap() as f32 / (1 << 15) as f32;
-        write!(out, "{}{}", sample, if i % channels as usize == (channels - 1).into() { "\n" } else { " " }).unwrap();
+        let channel_index = i % channels as usize;
+        if sample_index < block_size {
+            input_buffer[sample_index][channel_index] = sample;
+        } else {
+            let input_buffer_slice = &input_buffer[..].iter().map(|v| v.as_slice()).collect::<Vec<_>>();
+            let input_buffer_slice_2d = &input_buffer_slice[..];
+            let mut output_buffer_slice = output_buffer[..].iter_mut().map(|v| v.as_mut_slice()).collect::<Vec<_>>();
+            let output_buffer_slice_2d = &mut output_buffer_slice[..];
+            comb_filter.process(input_buffer_slice_2d, output_buffer_slice_2d);
+            for block_index in output_buffer_slice_2d.iter_mut() {
+                for channel in block_index.iter_mut() {
+                    let written_sample = (*channel * i16::MAX as f32) as i16;
+                    out.write_sample(written_sample).unwrap();
+                }
+            }
+            sample_index = 0;
+            input_buffer[sample_index][channel_index] = sample;
+            block_index += 1;
+        }
+        if i % channels as usize == (channels - 1) as usize {
+            sample_index += 1;
+        }
+    }
+    // Handle remaining samples by zero padding another block
+    if sample_index != 0 {
+        for i in sample_index .. block_size {
+            for j in 0 .. channels as usize {
+                input_buffer[i][j] = 0.0;
+            }
+        }
+        let input_buffer_slice = &input_buffer[..].iter().map(|v| v.as_slice()).collect::<Vec<_>>();
+        let input_buffer_slice_2d = &input_buffer_slice[..];
+        let mut output_buffer_slice = output_buffer[..].iter_mut().map(|v| v.as_mut_slice()).collect::<Vec<_>>();
+        let output_buffer_slice_2d = &mut output_buffer_slice[..];
+        comb_filter.process(input_buffer_slice_2d, output_buffer_slice_2d);
+        for i in 0 .. block_size {
+            for j in 0 .. channels as usize {
+                let sample = output_buffer[i][j];
+                let written_sample = (sample * i16::MAX as f32) as i16;
+                out.write_sample(written_sample).unwrap();
+            }
+        }
     }
 }
