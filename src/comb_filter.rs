@@ -42,10 +42,6 @@ impl CombFilter {
     pub fn reset(&mut self) {
         self.set_param(FilterParam::Gain, 0.5).unwrap();
         self.set_param(FilterParam::Delay, self.max_delay_secs).unwrap();
-        for buffer in self.delay_line_list.iter_mut() {
-            buffer.reset();
-            buffer.set_read_index((self.sample_rate_hz*self.max_delay_secs) as usize - 1);
-        }
     }
 
     pub fn process(&mut self, input: &[&[f32]], output: &mut [&mut [f32]]) {
@@ -76,10 +72,13 @@ impl CombFilter {
     pub fn set_param(&mut self, param: FilterParam, value: f32) -> Result<(), Error> {
         match param {
             FilterParam::Delay => {
-                if value > self.max_delay_secs {
+                if value > self.max_delay_secs || value < 0.0 {
                     Result::Err(Error::InvalidValue {param, value})
                 } else {
                     self.parameter_list[1] = value;
+                    for buffer in self.delay_line_list.iter_mut() {
+                        buffer.set_read_index(buffer.capacity() - (self.sample_rate_hz*value) as usize - 1);
+                    }
                     Result::Ok(())
                 }
             },
