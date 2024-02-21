@@ -62,7 +62,7 @@ impl CombFilter {
                         self.delay_line_list[j].push(x_n);
                     },
                     FilterType::IIR => {
-                        let value = self.delay_line_list[j].peek();
+                        let value = self.delay_line_list[j].pop();
                         *sample = x_n + gain * value;
                         self.delay_line_list[j].push(x_n + gain * value);
                     },
