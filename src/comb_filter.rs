@@ -1,7 +1,7 @@
 use hound::{SampleFormat, WavSpec};
 use core::f32::consts::PI;
-use crate::comb_filter::FilterParam::Delay;
-use crate::comb_filter::FilterType::FIR;
+use crate::comb_filter::FilterParam::{Delay, Gain};
+use crate::comb_filter::FilterType::{FIR, IIR};
 use crate::ring_buffer::RingBuffer;
 
 pub struct CombFilter {
@@ -115,8 +115,9 @@ fn test_zero_output() {
     let channels = spec.channels as usize;
     let sample_rate = 44100.0;
     let frequency: f32 = 500.0;
-    let delay = 1.0 / frequency;
+    let delay = 1.0 / (frequency*2.0);
     let mut comb_filter = CombFilter::new(FIR, delay, sample_rate, channels);
+    _ = comb_filter.set_param(Gain, 1.0);
     let mut input_buffer = vec![vec![f32::default(); channels]; block_size];
     let mut output_buffer = vec![vec![f32::default(); channels]; block_size];
     for i in 0 .. block_size {
@@ -132,7 +133,40 @@ fn test_zero_output() {
     for i in 0 .. block_size {
         for j in 0 .. channels {
             let value = output_buffer[i][j];
-            assert!(value <= f32::EPSILON);
+            if i > 50 {
+                assert!(value <= 0.01);
+            }
+        }
+    }
+}
+#[test]
+fn test_magnitude_increase() {
+    let spec = WavSpec{channels: 1, sample_rate: 44100, bits_per_sample: 16, sample_format: SampleFormat::Int};
+    let block_size: usize = 1024;
+    let channels = spec.channels as usize;
+    let sample_rate = 44100.0;
+    let frequency: f32 = 500.0;
+    let delay = 1.0 / (frequency*2.0);
+    let mut comb_filter = CombFilter::new(IIR, delay, sample_rate, channels);
+    _ = comb_filter.set_param(Gain, 0.4);
+    let mut input_buffer = vec![vec![f32::default(); channels]; block_size];
+    let mut output_buffer = vec![vec![f32::default(); channels]; block_size];
+    for i in 0 .. block_size {
+        for j in 0 .. channels {
+            input_buffer[i][j] = 0.5 * (2.0*PI*frequency*(i as f32/sample_rate)).sin();
+        }
+    }
+    let input_buffer_slice = &input_buffer[..].iter().map(|v| v.as_slice()).collect::<Vec<_>>();
+    let input_buffer_slice_2d = &input_buffer_slice[..];
+    let mut output_buffer_slice = output_buffer[..].iter_mut().map(|v| v.as_mut_slice()).collect::<Vec<_>>();
+    let output_buffer_slice_2d = &mut output_buffer_slice[..];
+    comb_filter.process(input_buffer_slice_2d, output_buffer_slice_2d);
+    for i in 0 .. block_size {
+        for j in 0 .. channels {
+            if i > 50 {
+                let value = output_buffer[i][j] / input_buffer[i][j];
+                assert!(f32::abs(value) >= 0.5);
+            }
         }
     }
 }
