@@ -86,3 +86,90 @@
   ```
 </details>
 
+# drumloop.wav FIR MATLAB Plot
+## Gain = 0.1, Delay = 0.1 seconds, Channels=1
+<img width="1158" alt="Screenshot 2024-02-20 at 8 07 30 PM" src="https://github.com/emurray2/ase-2024/assets/15041342/c64fe156-45cb-4de5-8ff8-93c719de87b9">
+
+# drumloop.wav FIR MATLAB Code
+## Gain = 0.1, Delay = 0.1 seconds, Channels=1
+<details>
+  <summary> FIR MATLAB Code</summary>
+
+  ```
+  [x,Fs] = audioread('drumloop.wav');
+  [rust,Fs_rust] = audioread('drumloopdata_rust.wav');
+  g=0.1;
+  x_size=size(x);
+  channels=x_size(2);
+  Delayline=zeros(Fs*0.1,channels);
+  y = zeros(length(x),channels);
+  rust = rust(1:length(y),:);
+  tt=linspace(0,length(y)/Fs,length(y));
+  for n=1:length(x)
+      for channel=1:channels
+          y(n,channel)=x(n,channel)+g*Delayline(length(Delayline),channel);
+          Delayline(:,channel)=[x(n,channel);Delayline(1:length(Delayline)-1,channel)];
+      end
+  end
+  diff = rust - y;
+  figure
+  subplot(4,1,1)
+  plot(tt, y(:,1))
+  title('MATLAB')
+  subplot(4,1,2)
+  %plot(tt, y(:,2))
+  subplot(4,1,3)
+  plot(tt, diff(:,1))
+  ylim([-1 1])
+  title('Difference')
+  subplot(4,1,4)
+  %plot(tt, diff(:,2))
+  ylim([-1 1])
+  filename = 'drumloopdata_matlab.wav';
+  audiowrite(filename,y,Fs);
+  ```
+</details>
+
+# drumloop.wav IIR MATLAB Plot
+## Gain = 0.1, Delay = 0.1 seconds, Channels=1
+<img width="1153" alt="Screenshot 2024-02-20 at 8 06 59 PM" src="https://github.com/emurray2/ase-2024/assets/15041342/921a4d65-b7ae-45fc-9e44-50fd66f2a9df">
+
+# drumloop.wav IIR MATLAB Code
+## Gain = 0.1, Delay = 0.1 seconds, Channels=1
+<details>
+  <summary> FIR MATLAB Code</summary>
+
+  ```
+  [x,Fs] = audioread('drumloop.wav');
+  [rust,Fs_rust] = audioread('drumloopdata_rust.wav');
+  g=0.1;
+  x_size=size(x);
+  channels=x_size(2);
+  Delayline=zeros(Fs*0.1,channels);
+  y = zeros(length(x),channels);
+  rust = rust(1:length(y),:);
+  tt=linspace(0,length(y)/Fs,length(y));
+  for n=1:length(x)
+      for channel=1:channels
+          y(n,channel)=x(n,channel)+g*Delayline(length(Delayline),channel);
+          Delayline(:,channel)=[y(n,channel);Delayline(1:length(Delayline)-1,channel)];
+      end
+  end
+  diff = rust - y;
+  figure
+  subplot(4,1,1)
+  plot(tt, y(:,1))
+  title('MATLAB')
+  subplot(4,1,2)
+  %plot(tt, y(:,2))
+  subplot(4,1,3)
+  plot(tt, diff(:,1))
+  ylim([-1 1])
+  title('Difference')
+  subplot(4,1,4)
+  %plot(tt, diff(:,2))
+  ylim([-1 1])
+  filename = 'drumloopdata_matlab.wav';
+  audiowrite(filename,y,Fs);
+  ```
+</details>
