@@ -1,13 +1,16 @@
 use std::{fs::File, io::Write};
-
+#[doc(inline)]
+pub use vibrato::Vibrato;
+#[doc(hidden)]
 mod ring_buffer;
+#[doc(hidden)]
 mod vibrato;
-
+#[doc(hidden)]
 fn show_info() {
     eprintln!("MUSI-6106 Assignment Executable");
     eprintln!("(c) 2024 Stephen Garrett & Ian Clester");
 }
-
+#[doc(hidden)]
 fn main() {
    show_info();
 
