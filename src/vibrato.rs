@@ -40,6 +40,11 @@ impl Vibrato {
             }
         }
     }
+    /// Reset the effect and its parameters to their default state
+    pub fn reset(&mut self) {
+        self.set_param(VibratoParam::DelayTime, 0.005);
+        self.set_param(VibratoParam::ModulationFrequency, 0.1);
+    }
 }
 
 #[cfg(test)]
@@ -67,5 +72,14 @@ mod tests {
         effect.set_param(VibratoParam::ModulationFrequency, 148.267);
         assert_eq!(effect.modulation_frequency, 148.267);
         assert_eq!(effect.modulation_length, 0.0033620635);
+    }
+    #[test]
+    fn test_reset() {
+        let mut effect = Vibrato::new(44100.0, 1.0, 44100.0);
+        effect.reset();
+        assert_eq!(effect.delay_time, 0.005);
+        assert_eq!(effect.delay_length, 221);
+        assert_eq!(effect.modulation_frequency, 0.1);
+        assert_eq!(effect.modulation_length, 0.000002267573696);
     }
 }
