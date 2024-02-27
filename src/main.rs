@@ -1,6 +1,7 @@
 use std::{fs::File, io::Write};
 #[doc(inline)]
 pub use vibrato::Vibrato;
+pub use vibrato::VibratoParam;
 #[doc(hidden)]
 mod ring_buffer;
 #[doc(hidden)]

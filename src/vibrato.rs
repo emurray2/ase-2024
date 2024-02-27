@@ -7,12 +7,13 @@ pub struct Vibrato {
     /// The modulation frequency of the vibrato in Hertz
     pub modulation_frequency: f32,
     #[doc(hidden)]
-    modulation_length: f32,
+    modulation_length: f32
 }
 
 /// Parameters which characterize a Vibrato effect
 pub enum VibratoParam {
-
+    DelayTime,
+    ModulationFrequency
 }
 
 impl Vibrato {
