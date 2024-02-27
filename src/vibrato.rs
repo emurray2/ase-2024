@@ -11,3 +11,14 @@ impl Vibrato {
         Vibrato{delay_length}
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::Vibrato;
+
+    #[test]
+    fn test_initialization() {
+        let effect = Some(Vibrato::new(44100.0, 5.0));
+        assert!(true)
+    }
+}
