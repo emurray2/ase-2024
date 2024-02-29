@@ -1,8 +1,8 @@
 #[derive(Clone)]
 pub struct RingBuffer<T> {
-    buffer: Vec<T>,
-    head: usize,
-    tail: usize,
+    pub buffer: Vec<T>,
+    pub head: usize,
+    pub tail: usize,
 }
 
 impl<T: Copy + Default> RingBuffer<T> {

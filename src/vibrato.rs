@@ -1,4 +1,5 @@
 use crate::lfo::LFO;
+use crate::ring_buffer::RingBuffer;
 
 /// Vibrato effect based on the DAFX Chapter 3 MATLAB implementation
 pub struct Vibrato {
@@ -11,7 +12,8 @@ pub struct Vibrato {
     /// The modulation frequency of the vibrato in Hertz
     pub modulation_frequency: f32,
     #[doc(hidden)]
-    modulator: LFO
+    modulator: LFO,
+    delay_line_list: Vec<RingBuffer<f32>>
 }
 
 /// Parameters which characterize a Vibrato effect
@@ -26,7 +28,15 @@ impl Vibrato {
     /// Creates a Vibrato effect with the given sample rate in samples, delay time, modulation frequency, and number of channels
     pub fn new(sample_rate: f32, delay_time: f32, modulation_frequency: f32, num_channels: usize) -> Self {
         let delay_length = (delay_time*sample_rate).round() as usize;
-        Vibrato{sample_rate,delay_time,delay_length,modulation_frequency,modulator: LFO::new(modulation_frequency, 1.0, delay_length, num_channels, sample_rate)}
+        let capacity = 2+delay_length+delay_length*2;
+        Vibrato{
+            sample_rate,
+            delay_time,
+            delay_length,
+            modulation_frequency,
+            modulator: LFO::new(modulation_frequency, 1.0, delay_length, num_channels, sample_rate),
+            delay_line_list: vec![RingBuffer{buffer: vec![f32::default(); capacity+1], head: 0, tail: 1}; num_channels]
+        }
     }
     /// Sets the parameter values for this effect. See [VibratoParam].
     pub fn set_param(&mut self, param: VibratoParam, value: f32) {
@@ -57,7 +67,12 @@ impl Vibrato {
         for (i, channel) in output.iter_mut().enumerate() {
             for (j, y_n) in channel.iter_mut().enumerate() {
                 let x_n = input[i][j];
-                *y_n = x_n;
+                let lfo_val = modulator_buffers[i][j];
+                let pointer = 1.0+self.delay_length as f32+self.delay_length as f32*lfo_val;
+                let rounded_pointer = f32::floor(pointer);
+                let frac = pointer-rounded_pointer;
+                self.delay_line_list[i].push(x_n);
+                *y_n = self.delay_line_list[i].get_frac(frac);
             }
         }
     }
@@ -116,7 +131,11 @@ mod tests {
         effect.process(input_buffer_slice_2d, output_buffer_slice_2d);
         for i in 0 .. channels {
             for j in 0 .. block_size {
-                assert_eq!(output_buffer[i][j], input_buffer[i][j]);
+                let input_sample = input_buffer[i][j];
+                let output_sample = output_buffer[i][j];
+                if input_sample != 0.0 && output_sample != 0.0 {
+                    assert_ne!(output_buffer[i][j], input_buffer[i][j]);
+                }
             }
         }
     }
