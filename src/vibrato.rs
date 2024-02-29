@@ -103,7 +103,7 @@ mod tests {
         let mut output_buffer = vec![vec![f32::default(); channels]; block_size];
         for i in 0 .. block_size {
             for j in 0 .. channels {
-                input_buffer[i][j] = (2.0*PI*440.0*(i as f32/sample_rate)).sin();
+                input_buffer[i][j] = (2.0*PI*frequency*(i as f32/sample_rate)).sin();
             }
         }
         let input_buffer_slice = &input_buffer[..].iter().map(|v| v.as_slice()).collect::<Vec<_>>();

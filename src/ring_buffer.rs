@@ -77,7 +77,7 @@ impl<T: Copy + Default> RingBuffer<T> {
 }
 
 impl RingBuffer<f32> {
-    // Return the value at at an offset from the current read index.
+    // Return the value at an offset from the current read index.
     // To handle fractional offsets, linearly interpolate between adjacent values. 
     pub fn get_frac(&self, offset: f32) -> f32 {
         self.get(offset.trunc() as usize+1)*offset.fract()+self.get(offset.trunc() as usize)*(1.0-offset.fract())

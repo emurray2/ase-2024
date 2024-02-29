@@ -1,6 +1,5 @@
 use std::f32::consts::PI;
 use crate::ring_buffer::RingBuffer;
-use crate::vibrato;
 
 /// Generates a sine LFO for operating on other effects, such as [vibrato::Vibrato]
 pub struct LFO {
@@ -58,10 +57,6 @@ mod tests {
     use crate::lfo::LFO;
     use crate::LFOParam;
 
-    fn test_initialization() {
-        let effect = LFO::new(440.0, 1.0, 50, 2, 44100.0);
-        assert!(true);
-    }
     #[test]
     fn test_set_params() {
         let mut effect = LFO::new(440.0, 1.0, 50, 2, 44100.0);
