@@ -1,7 +1,8 @@
+#[derive(Clone)]
 pub struct RingBuffer<T> {
-    buffer: Vec<T>,
-    head: usize,
-    tail: usize,
+    pub buffer: Vec<T>,
+    pub head: usize,
+    pub tail: usize,
 }
 
 impl<T: Copy + Default> RingBuffer<T> {
@@ -76,15 +77,16 @@ impl<T: Copy + Default> RingBuffer<T> {
 }
 
 impl RingBuffer<f32> {
-    // Return the value at at an offset from the current read index.
+    // Return the value at an offset from the current read index.
     // To handle fractional offsets, linearly interpolate between adjacent values. 
     pub fn get_frac(&self, offset: f32) -> f32 {
-        todo!("implement")
+        self.get(offset.trunc() as usize+1)*offset.fract()+self.get(offset.trunc() as usize)*(1.0-offset.fract())
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::f32::consts::PI;
     use super::*;
 
     #[test]
@@ -195,5 +197,15 @@ mod tests {
         assert_eq!(ring_buffer.get_read_index(), 3);
 
         // NOTE: Negative indices are also weird, but we can't even pass them due to type checking!
+    }
+
+    #[test]
+    fn test_frac_offset() {
+        let capacity = 5;
+        let mut ring_buffer = RingBuffer::<f32>::new(capacity);
+        for i in 0 .. 5 {
+            ring_buffer.push(i as f32*1.0);
+        }
+        assert_eq!(ring_buffer.get_frac(PI), PI);
     }
 }
