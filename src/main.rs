@@ -2,10 +2,15 @@ use std::{fs::File, io::Write};
 #[doc(inline)]
 pub use vibrato::Vibrato;
 pub use vibrato::VibratoParam;
+pub use lfo::LFO;
+pub use lfo::LFOParam;
 #[doc(hidden)]
 mod ring_buffer;
 #[doc(hidden)]
 mod vibrato;
+#[doc(hidden)]
+mod lfo;
+
 #[doc(hidden)]
 fn show_info() {
     eprintln!("MUSI-6106 Assignment Executable");
