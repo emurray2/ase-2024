@@ -1,5 +1,9 @@
+use std::f32::consts::PI;
 use crate::lfo::LFO;
 use crate::ring_buffer::RingBuffer;
+
+// The file is designed similar to how we designed the comb filter in the last assignment,
+// except there is a mod index to store the index of an LFO
 
 /// Vibrato effect based on the DAFX Chapter 3 MATLAB implementation
 pub struct Vibrato {
@@ -13,7 +17,8 @@ pub struct Vibrato {
     pub modulation_frequency: f32,
     #[doc(hidden)]
     modulator: LFO,
-    delay_line_list: Vec<RingBuffer<f32>>
+    delay_line_list: Vec<RingBuffer<f32>>,
+    mod_index: f32
 }
 
 /// Parameters which characterize a Vibrato effect
@@ -35,7 +40,8 @@ impl Vibrato {
             delay_length,
             modulation_frequency,
             modulator: LFO::new(modulation_frequency, 1.0, delay_length, num_channels, sample_rate),
-            delay_line_list: vec![RingBuffer{buffer: vec![f32::default(); capacity+1], head: 0, tail: 1}; num_channels]
+            delay_line_list: vec![RingBuffer{buffer: vec![f32::default(); capacity], head: 0, tail: 0}; num_channels],
+            mod_index: 0.0
         }
     }
     /// Sets the parameter values for this effect. See [VibratoParam].
@@ -58,22 +64,24 @@ impl Vibrato {
     }
     /// Process block for the effect. All the Digital Signal Processing happens here.
     pub fn process(&mut self, input: &[&[f32]], output: &mut[&mut[f32]]) {
-        let block_size = input[0].len();
-        let num_channels = input.len();
-        let mut modulator_buffers = vec![vec![f32::default(); block_size]; num_channels];
+        let block_size = input.len();
+        let num_channels = input[0].len();
+        let mut modulator_buffers = vec![vec![f32::default(); num_channels]; block_size];
         let mut output_buffer_slice = modulator_buffers[..].iter_mut().map(|v| v.as_mut_slice()).collect::<Vec<_>>();
         let output_buffer_slice_2d = &mut output_buffer_slice[..];
         self.modulator.process(output_buffer_slice_2d);
-        for (i, channel) in output.iter_mut().enumerate() {
-            for (j, y_n) in channel.iter_mut().enumerate() {
+        for (i, block) in output.iter_mut().enumerate() {
+            let lfo_val = 1.0 * (2.0*PI*self.mod_index*(self.modulation_frequency/self.sample_rate)).sin();
+            for (j, channel) in block.iter_mut().enumerate() {
                 let x_n = input[i][j];
-                let lfo_val = modulator_buffers[i][j];
-                let pointer = 1.0+self.delay_length as f32+self.delay_length as f32*lfo_val;
+                let pointer = 1.0+self.delay_length as f32+(self.delay_length as f32*lfo_val);
                 let rounded_pointer = f32::floor(pointer);
                 let frac = pointer-rounded_pointer;
-                self.delay_line_list[i].push(x_n);
-                *y_n = self.delay_line_list[i].get_frac(frac);
+                self.delay_line_list[j].push(x_n);
+                self.delay_line_list[j].pop();
+                *channel = self.delay_line_list[j].get_frac(pointer);
             }
+            self.mod_index += 1.0;
         }
     }
 }
@@ -117,11 +125,11 @@ mod tests {
         let frequency = 440.0;
         let sample_rate = 44100.0;
         let mut effect = Vibrato::new(sample_rate, 1.0, 44100.0, channels);
-        let mut input_buffer = vec![vec![f32::default(); block_size]; channels];
-        let mut output_buffer = vec![vec![f32::default(); block_size]; channels];
-        for i in 0 .. channels {
-            for j in 0 .. block_size {
-                input_buffer[i][j] = (2.0*PI*frequency*(j as f32/sample_rate)).sin();
+        let mut input_buffer = vec![vec![f32::default(); channels]; block_size];
+        let mut output_buffer = vec![vec![f32::default(); channels]; block_size];
+        for i in 0 .. block_size {
+            for j in 0 .. channels {
+                input_buffer[i][j] = (2.0*PI*frequency*(i as f32/sample_rate)).sin();
             }
         }
         let input_buffer_slice = &input_buffer[..].iter().map(|v| v.as_slice()).collect::<Vec<_>>();
@@ -129,8 +137,8 @@ mod tests {
         let mut output_buffer_slice = output_buffer[..].iter_mut().map(|v| v.as_mut_slice()).collect::<Vec<_>>();
         let output_buffer_slice_2d = &mut output_buffer_slice[..];
         effect.process(input_buffer_slice_2d, output_buffer_slice_2d);
-        for i in 0 .. channels {
-            for j in 0 .. block_size {
+        for i in 0 .. block_size {
+            for j in 0 .. channels {
                 let input_sample = input_buffer[i][j];
                 let output_sample = output_buffer[i][j];
                 if input_sample != 0.0 && output_sample != 0.0 {
