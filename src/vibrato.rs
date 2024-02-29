@@ -18,7 +18,8 @@ pub struct Vibrato {
     #[doc(hidden)]
     modulator: LFO,
     delay_line_list: Vec<RingBuffer<f32>>,
-    mod_index: f32
+    mod_index: f32,
+    modulation_amplitude: f32
 }
 
 /// Parameters which characterize a Vibrato effect
@@ -30,8 +31,8 @@ pub enum VibratoParam {
 }
 
 impl Vibrato {
-    /// Creates a Vibrato effect with the given sample rate in samples, delay time, modulation frequency, and number of channels
-    pub fn new(sample_rate: f32, delay_time: f32, modulation_frequency: f32, num_channels: usize) -> Self {
+    /// Creates a Vibrato effect with the given sample rate in samples, delay time, modulation frequency, number of channels, and modulation amplitude
+    pub fn new(sample_rate: f32, delay_time: f32, modulation_frequency: f32, num_channels: usize, modulation_amplitude: f32) -> Self {
         let delay_length = (delay_time*sample_rate).round() as usize;
         let capacity = 2+delay_length+delay_length*2;
         Vibrato{
@@ -41,7 +42,8 @@ impl Vibrato {
             modulation_frequency,
             modulator: LFO::new(modulation_frequency, 1.0, delay_length, num_channels, sample_rate),
             delay_line_list: vec![RingBuffer{buffer: vec![f32::default(); capacity], head: 0, tail: 0}; num_channels],
-            mod_index: 0.0
+            mod_index: 0.0,
+            modulation_amplitude
         }
     }
     /// Sets the parameter values for this effect. See [VibratoParam].
@@ -75,8 +77,6 @@ impl Vibrato {
             for (j, channel) in block.iter_mut().enumerate() {
                 let x_n = input[i][j];
                 let pointer = 1.0+self.delay_length as f32+(self.delay_length as f32*lfo_val);
-                let rounded_pointer = f32::floor(pointer);
-                let frac = pointer-rounded_pointer;
                 self.delay_line_list[j].push(x_n);
                 self.delay_line_list[j].pop();
                 *channel = self.delay_line_list[j].get_frac(pointer);
@@ -90,17 +90,18 @@ impl Vibrato {
 mod tests {
     use std::f32::consts::PI;
     use crate::{Vibrato, VibratoParam};
+    use crate::ring_buffer::RingBuffer;
 
     #[test]
     fn test_initialization() {
-        let effect = Vibrato::new(44100.0, 1.0, 44100.0, 2);
+        let effect = Vibrato::new(44100.0, 1.0, 44100.0, 2, 1.0);
         assert_eq!(effect.delay_time, 1.0);
         assert_eq!(effect.delay_length, 44100);
         assert_eq!(effect.modulation_frequency, 44100.0);
     }
     #[test]
     fn test_set_params() {
-        let mut effect = Vibrato::new(44100.0, 1.0, 44100.0, 2);
+        let mut effect = Vibrato::new(44100.0, 1.0, 44100.0, 2, 1.0);
         assert_eq!(effect.delay_time, 1.0);
         assert_eq!(effect.delay_length, 44100);
         assert_eq!(effect.modulation_frequency, 44100.0);
@@ -112,7 +113,7 @@ mod tests {
     }
     #[test]
     fn test_reset() {
-        let mut effect = Vibrato::new(44100.0, 1.0, 44100.0, 2);
+        let mut effect = Vibrato::new(44100.0, 1.0, 44100.0, 2, 1.0);
         effect.reset();
         assert_eq!(effect.delay_time, 0.005);
         assert_eq!(effect.delay_length, 221);
@@ -124,7 +125,7 @@ mod tests {
         let block_size = 1024;
         let frequency = 440.0;
         let sample_rate = 44100.0;
-        let mut effect = Vibrato::new(sample_rate, 1.0, 44100.0, channels);
+        let mut effect = Vibrato::new(sample_rate, 1.0, 44100.0, channels, 1.0);
         let mut input_buffer = vec![vec![f32::default(); channels]; block_size];
         let mut output_buffer = vec![vec![f32::default(); channels]; block_size];
         for i in 0 .. block_size {
@@ -143,6 +144,41 @@ mod tests {
                 let output_sample = output_buffer[i][j];
                 if input_sample != 0.0 && output_sample != 0.0 {
                     assert_ne!(output_buffer[i][j], input_buffer[i][j]);
+                }
+            }
+        }
+    }
+    #[test]
+    fn test_modulation_zero() {
+        let channels = 2;
+        let block_size = 1024;
+        let frequency = 440.0;
+        let sample_rate = 44100.0;
+        let mut effect = Vibrato::new(sample_rate, 1.0, 44100.0, channels, 0.0);
+        let mut input_buffer = vec![vec![f32::default(); channels]; block_size];
+        let mut output_buffer = vec![vec![f32::default(); channels]; block_size];
+        let mut delayed_buffer = vec![vec![f32::default(); channels]; block_size];
+        let delay_length = effect.delay_length;
+        let capacity = 2+delay_length+delay_length*2;
+        let mut ring_buffer_list = vec![RingBuffer{buffer: vec![f32::default(); capacity], head: 0, tail: 0}; channels];
+        for i in 0 .. block_size {
+            for j in 0 .. channels {
+                input_buffer[i][j] = (2.0*PI*frequency*(i as f32/sample_rate)).sin();
+                ring_buffer_list[j].push(input_buffer[i][j]);
+                delayed_buffer[i][j] = ring_buffer_list[j].pop();
+            }
+        }
+        let input_buffer_slice = &input_buffer[..].iter().map(|v| v.as_slice()).collect::<Vec<_>>();
+        let input_buffer_slice_2d = &input_buffer_slice[..];
+        let mut output_buffer_slice = output_buffer[..].iter_mut().map(|v| v.as_mut_slice()).collect::<Vec<_>>();
+        let output_buffer_slice_2d = &mut output_buffer_slice[..];
+        effect.process(input_buffer_slice_2d, output_buffer_slice_2d);
+        for i in 0 .. block_size {
+            for j in 0 .. channels {
+                let input_sample = input_buffer[i][j];
+                let output_sample = output_buffer[i][j];
+                if input_sample != 0.0 && output_sample != 0.0 {
+                    assert_eq!(output_buffer[i][j], delayed_buffer[i][j]);
                 }
             }
         }

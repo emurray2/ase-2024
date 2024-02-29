@@ -37,7 +37,7 @@ fn main() {
     let mut block_index: usize = 0;
     let mut input_buffer = vec![vec![f32::default(); channels as usize]; block_size];
     let mut output_buffer = vec![vec![f32::default(); channels as usize]; block_size];
-    let mut vibrato = Vibrato::new(args[3].parse().unwrap(), args[4].parse().unwrap(), args[5].parse().unwrap(), channels as usize);
+    let mut vibrato = Vibrato::new(args[3].parse().unwrap(), args[4].parse().unwrap(), args[5].parse().unwrap(), channels as usize, 0.0);
     for (i, sample) in reader.samples::<i16>().enumerate() {
         let sample = sample.unwrap() as f32 / (1 << 15) as f32;
         let channel_index = i % channels as usize;
