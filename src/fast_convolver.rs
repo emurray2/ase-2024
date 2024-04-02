@@ -1,5 +1,5 @@
 struct FastConvolver {
-    // TODO: your fields here
+    mode: ConvolutionMode
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -10,7 +10,7 @@ pub enum ConvolutionMode {
 
 impl FastConvolver {
     pub fn new(impulse_response: &[f32], mode: ConvolutionMode) -> Self {
-        todo!("implement")
+        FastConvolver{mode}
     }
 
     pub fn reset(&mut self) {
