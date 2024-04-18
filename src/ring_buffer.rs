@@ -31,11 +31,30 @@ impl<T: Copy + Default> RingBuffer<T> {
     pub fn get(&self, offset: usize) -> T {
         self.buffer[(self.tail + offset) % self.capacity()]
     }
+    pub fn set(&mut self, offset: usize, value: T){
+        let capacity = self.capacity();
+        self.buffer[(self.tail + offset) % capacity] = value;
+    }
 
     // `push` and `pop` write/read and advance the indices.
     pub fn push(&mut self, value: T) {
         self.buffer[self.head] = value;
-        self.head = (self.head + 1) % self.capacity();
+        //self.head = (self.head + 1) % self.capacity();
+        // BUG FIX:
+        // If the ring buffer is full, then the oldest result SHOULD BE ABANDONED (OVERWRITTEN)
+        // Current implement KEEPS the tail of the queue, which is wrong.
+        if (self.head + 1)%self.capacity() == self.tail // If the pointers meet 
+        {
+            // then move both the head and tail
+            self.head = (self.head + 1) % self.capacity();
+            self.tail = (self.tail + 1) % self.capacity();
+        }
+        else 
+        {
+            // otherwise move the head only
+            self.head = (self.head + 1) % self.capacity();
+
+        }
     }
 
     pub fn pop(&mut self) -> T {
